@@ -10,7 +10,7 @@ import 'pages/search_page.dart';
 import 'pages/stats_page.dart';
 import 'pages/setting_page.dart';
 import 'pages/task_detail_page.dart';
-import 'widgets/create_task_sheet.dart';
+import 'pages/create_task_page.dart';
 import 'widgets/create_folder_sheet.dart';
 import 'utils/constants.dart';
 
@@ -27,6 +27,7 @@ class App extends StatelessWidget {
       routes: {
         '/search': (_) => const SearchPage(),
         '/task-detail': (_) => const TaskDetailPage(),
+        '/create-task': (_) => const CreateTaskPage(),
         '/category-tasks': (_) => const CategoryTaskPage(),
         '/date-tasks': (_) => const DateTaskPage(),
       },
@@ -102,7 +103,7 @@ class MainShell extends StatelessWidget {
             ),
           ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () => provider.openCreateTaskSheet(),
+            onPressed: () => Navigator.pushNamed(context, '/create-task'),
             backgroundColor: const Color(0xFF4F46E5),
             elevation: 4,
             shape: RoundedRectangleBorder(
@@ -169,9 +170,7 @@ class MainShell extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(30),
                 child: SingleChildScrollView(
-                  child: provider.overlayType == 'task'
-                      ? CreateTaskSheet(existingTask: provider.editingTask)
-                      : const CreateFolderSheet(),
+                  child: const CreateFolderSheet(),
                 ),
               ),
             ),

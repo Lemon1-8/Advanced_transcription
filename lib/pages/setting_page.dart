@@ -1,5 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
+
 import '../providers/app_provider.dart';
 import '../widgets/page_header.dart';
 import '../widgets/settings_row.dart';
@@ -36,6 +43,106 @@ class SettingPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _exportData(BuildContext context) async {
+    try {
+      final provider = context.read<AppProvider>();
+      final jsonStr = provider.exportToJsonString();
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final file = File('${tempDir.path}/任务记录器_备份_$timestamp.json');
+      await file.writeAsString(jsonStr);
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: '任务记录器数据备份',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('导出失败：$e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _importData(BuildContext context) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result == null || result.files.isEmpty) return;
+      final filePath = result.files.first.path;
+      if (filePath == null) return;
+
+      final file = File(filePath);
+      final jsonStr = await file.readAsString();
+
+      // Validate JSON before confirmation
+      try {
+        final decoded = jsonDecode(jsonStr);
+        if (decoded is! Map || (decoded['data'] as Map?)?.isEmpty == true) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('导入失败：文件格式不正确')),
+            );
+          }
+          return;
+        }
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('导入失败：文件不是有效的 JSON')),
+          );
+        }
+        return;
+      }
+
+      if (!context.mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('导入数据？'),
+          content: const Text('导入将覆盖当前所有数据，此操作无法撤销。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('确认导入'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true) return;
+      if (!context.mounted) return;
+
+      final provider = context.read<AppProvider>();
+      final success = await provider.importFromJsonString(jsonStr);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(success ? '数据导入成功' : '导入失败：数据格式有误'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('导入失败：$e')),
+        );
+      }
+    }
   }
 
   @override
@@ -147,6 +254,18 @@ class SettingPage extends StatelessWidget {
                         provider.updateSettings(updated);
                       },
                     ),
+                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                    SettingsRow(
+                      label: '导出数据',
+                      value: '分享 JSON 文件',
+                      onTap: () => _exportData(context),
+                    ),
+                    SettingsRow(
+                      label: '导入数据',
+                      value: '从 JSON 文件恢复',
+                      onTap: () => _importData(context),
+                    ),
+                    const Divider(height: 1, color: Color(0xFFF1F5F9)),
                     SettingsRow(
                       label: '清空全部数据',
                       value: '谨慎操作',

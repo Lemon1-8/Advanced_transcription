@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/task.dart';
 import '../providers/app_provider.dart';
 import '../widgets/page_header.dart';
 import '../widgets/status_mark.dart';
@@ -51,21 +50,7 @@ class TaskDetailPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              PageHeader(
-                title: '任务详情',
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined,
-                        color: Color(0xFF4F46E5)),
-                    onPressed: () => provider.openEditTaskSheet(task),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outlined,
-                        color: Color(0xFFE11D48)),
-                    onPressed: () => _confirmDelete(context, task),
-                  ),
-                ],
-              ),
+              const PageHeader(title: '任务详情'),
               // Status and title
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,31 +201,6 @@ class TaskDetailPage extends StatelessWidget {
     }
   }
 
-  void _confirmDelete(BuildContext context, Task task) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('是否删除该任务？'),
-        content: const Text('删除后无法恢复。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () {
-              context.read<AppProvider>().deleteTask(task.id);
-              Navigator.of(ctx).pop();
-              Navigator.of(context).pop();
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _FieldLabel extends StatelessWidget {

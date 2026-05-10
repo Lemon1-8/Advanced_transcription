@@ -40,7 +40,7 @@ class CategoryTaskPage extends StatelessWidget {
                           task: tasks[index],
                           showFolder: false,
                           onTap: () => Navigator.of(context).pushNamed(
-                            '/task-detail',
+                            '/create-task',
                             arguments: tasks[index].id,
                           ),
                         ),

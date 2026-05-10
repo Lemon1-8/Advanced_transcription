@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/task.dart';
@@ -15,8 +16,8 @@ class AppProvider extends ChangeNotifier {
 
   // UI state
   int _currentTab = 0;
-  String? _overlayType; // 'task' | 'folder' | null
-  Task? _editingTask;
+  int _tabTapVersion = 0;
+  String? _overlayType; // 'folder' | null
   Folder? _editingFolder;
 
   // Query state
@@ -36,8 +37,8 @@ class AppProvider extends ChangeNotifier {
   AppSettings get settings => _settings;
   bool get initialized => _initialized;
   int get currentTab => _currentTab;
+  int get tabTapVersion => _tabTapVersion;
   String? get overlayType => _overlayType;
-  Task? get editingTask => _editingTask;
   Folder? get editingFolder => _editingFolder;
   String get queryKeyword => _queryKeyword;
   String get queryCategory => _queryCategory;
@@ -256,18 +257,7 @@ class AppProvider extends ChangeNotifier {
 
   void navigateToTab(int index) {
     _currentTab = index;
-    notifyListeners();
-  }
-
-  void openCreateTaskSheet() {
-    _overlayType = 'task';
-    _editingTask = null;
-    notifyListeners();
-  }
-
-  void openEditTaskSheet(Task task) {
-    _overlayType = 'task';
-    _editingTask = task;
+    _tabTapVersion++;
     notifyListeners();
   }
 
@@ -285,7 +275,6 @@ class AppProvider extends ChangeNotifier {
 
   void closeOverlay() {
     _overlayType = null;
-    _editingTask = null;
     _editingFolder = null;
     notifyListeners();
   }
@@ -440,6 +429,54 @@ class AppProvider extends ChangeNotifier {
       }
       return DateGroup(label: label, key: key, tasks: tasks);
     }).toList();
+  }
+
+  // ========== Data Export / Import ==========
+
+  String exportToJsonString() {
+    final data = {
+      'version': 1,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'appName': appName,
+      'data': {
+        'tasks': _tasks.map((t) => t.toJson()).toList(),
+        'folders': _folders.map((f) => f.toJson()).toList(),
+        'settings': _settings.toJson(),
+      },
+    };
+    return jsonEncode(data);
+  }
+
+  Future<bool> importFromJsonString(String jsonStr) async {
+    try {
+      final decoded = jsonDecode(jsonStr) as Map<String, dynamic>;
+      if (decoded['data'] == null) return false;
+
+      final data = decoded['data'] as Map<String, dynamic>;
+
+      if (data['tasks'] is List) {
+        _tasks = (data['tasks'] as List)
+            .map((e) => Task.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
+      if (data['folders'] is List) {
+        _folders = (data['folders'] as List)
+            .map((e) => Folder.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
+      if (data['settings'] is Map) {
+        _settings =
+            AppSettings.fromJson(Map<String, dynamic>.from(data['settings']));
+      }
+
+      await _saveTasks();
+      await _saveFolders();
+      await _saveSettings();
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }
 

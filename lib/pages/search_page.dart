@@ -139,7 +139,7 @@ class _SearchPageState extends State<SearchPage> {
                                     task: results[index],
                                     onTap: () =>
                                         Navigator.of(context).pushNamed(
-                                      '/task-detail',
+                                      '/create-task',
                                       arguments: results[index].id,
                                     ),
                                   ),

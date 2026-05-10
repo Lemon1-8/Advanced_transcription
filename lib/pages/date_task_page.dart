@@ -48,7 +48,7 @@ class DateTaskPage extends StatelessWidget {
                         child: TaskCard(
                           task: tasks[index],
                           onTap: () => Navigator.of(context).pushNamed(
-                            '/task-detail',
+                            '/create-task',
                             arguments: tasks[index].id,
                           ),
                         ),
