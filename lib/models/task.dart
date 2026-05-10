@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import 'task_history.dart';
 
 const _uuid = Uuid();
 
@@ -7,10 +8,12 @@ class Task {
   String title;
   String description;
   String folderId;
-  String status; // 'todo' | 'done' | 'partial'
-  String createdAt; // YYYY-MM-DD
-  String updatedAt; // ISO datetime
+  String status;
+  String createdAt;
+  String updatedAt;
   String notes;
+  String taskDate;
+  List<TaskHistory> history;
 
   Task({
     String? id,
@@ -21,9 +24,13 @@ class Task {
     String? createdAt,
     String? updatedAt,
     this.notes = '',
+    String? taskDate,
+    List<TaskHistory>? history,
   })  : id = id ?? _uuid.v4(),
         createdAt = createdAt ?? _todayStr(),
-        updatedAt = updatedAt ?? DateTime.now().toIso8601String();
+        updatedAt = updatedAt ?? DateTime.now().toIso8601String(),
+        taskDate = taskDate ?? createdAt ?? _todayStr(),
+        history = history ?? [];
 
   static String _todayStr() {
     final now = DateTime.now();
@@ -46,7 +53,9 @@ class Task {
     String? folderId,
     String? status,
     String? notes,
+    String? taskDate,
     String? updatedAt,
+    List<TaskHistory>? history,
   }) {
     return Task(
       id: id,
@@ -57,6 +66,8 @@ class Task {
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now().toIso8601String(),
       notes: notes ?? this.notes,
+      taskDate: taskDate ?? this.taskDate,
+      history: history ?? this.history,
     );
   }
 
@@ -69,6 +80,8 @@ class Task {
         'createdAt': createdAt,
         'updatedAt': updatedAt,
         'notes': notes,
+        'taskDate': taskDate,
+        'history': history.map((h) => h.toJson()).toList(),
       };
 
   factory Task.fromJson(Map<String, dynamic> json) => Task(
@@ -80,5 +93,10 @@ class Task {
         createdAt: json['createdAt'] as String?,
         updatedAt: json['updatedAt'] as String?,
         notes: json['notes'] as String? ?? '',
+        taskDate: json['taskDate'] as String?,
+        history: (json['history'] as List<dynamic>?)
+            ?.map((e) =>
+                TaskHistory.fromJson(Map<String, dynamic>.from(e)))
+            .toList(),
       );
 }

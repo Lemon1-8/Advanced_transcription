@@ -375,18 +375,18 @@ class _HomePageState extends State<HomePage> {
     final rate = provider.todayCompletionRate;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF6366F1).withValues(alpha: 0.3),
-            blurRadius: 16,
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
@@ -394,34 +394,34 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      '今日任务信息',
+                      '今日任务',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w500,
                         color: Colors.white70,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       '今天 · ${now.month}月${now.day}日',
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 15,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
-                      '共 $total 个任务，已完成 $done 个',
+                      '$total 个 · $done 已完成',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 11,
                         color: Colors.white.withValues(alpha: 0.85),
                       ),
                     ),
@@ -429,18 +429,17 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   children: [
                     Text(
                       '${(rate * 100).toInt()}%',
                       style: const TextStyle(
-                        fontSize: 22,
+                        fontSize: 18,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
                       ),
@@ -454,7 +453,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Row(
             children: [
               _statItem(done.toString(), '已完成'),
@@ -470,27 +469,26 @@ class _HomePageState extends State<HomePage> {
   Widget _statItem(String value, String label) {
     return Expanded(
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 3),
+        padding: const EdgeInsets.symmetric(vertical: 5),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           children: [
             Text(
               value,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 1),
             Text(
               label,
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 10,
                 color: Colors.white70,
               ),
             ),

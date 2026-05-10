@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/folder.dart';
 import '../providers/app_provider.dart';
 import '../widgets/page_header.dart';
 import '../widgets/empty_state.dart';
@@ -7,6 +8,58 @@ import '../utils/constants.dart';
 
 class CategoryPage extends StatelessWidget {
   const CategoryPage({super.key});
+
+  static Future<void> _deleteFolder(
+      BuildContext context, AppProvider provider, Folder folder, int count) async {
+    if (count > 0) {
+      final go = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('无法删除'),
+          content: Text('该文件夹下有 $count 个任务，请先删除任务后再删除文件夹。'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('取消')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('去处理'),
+            ),
+          ],
+        ),
+      );
+      if (go == true && context.mounted) {
+        Navigator.of(context).pushNamed(
+          '/category-tasks',
+          arguments: {
+            'folderId': folder.id,
+            'folderName': folder.name,
+          },
+        );
+      }
+    } else {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('删除文件夹'),
+          content: Text('确认删除"${folder.name}"？'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('取消')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('删除',
+                  style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      );
+      if (confirm == true && context.mounted) {
+        await provider.deleteFolder(folder.id);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +104,9 @@ class CategoryPage extends StatelessWidget {
                               'folderName': folder.name,
                             },
                           ),
+                          onDelete: isDefault
+                              ? null
+                              : () => _deleteFolder(context, provider, folder, count),
                         );
                       },
                     ),
@@ -67,8 +123,9 @@ class CategoryPage extends StatelessWidget {
     String desc,
     int count,
     bool isDefault,
-    VoidCallback onTap,
-  ) {
+    VoidCallback onTap, {
+    VoidCallback? onDelete,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -141,6 +198,22 @@ class CategoryPage extends StatelessWidget {
                 ),
               ],
             ),
+            if (onDelete != null) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: onDelete,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.delete_outline,
+                      color: Colors.red, size: 18),
+                ),
+              ),
+            ],
           ],
         ),
       ),

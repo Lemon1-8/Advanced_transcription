@@ -56,7 +56,7 @@ class AppProvider extends ChangeNotifier {
 
   List<Task> get todayTasks {
     final today = du.todayStr();
-    return _tasks.where((t) => t.createdAt == today).toList();
+    return _tasks.where((t) => t.taskDate == today).toList();
   }
 
   // ========== Initialization ==========
@@ -89,6 +89,7 @@ class AppProvider extends ChangeNotifier {
     if (settingsData != null) {
       _settings = AppSettings.fromJson(Map<String, dynamic>.from(settingsData));
     }
+    _currentTab = _settings.defaultTab;
 
     // Ensure default folder exists
     if (_folders.every((f) => f.id != defaultFolderId)) {
@@ -132,6 +133,7 @@ class AppProvider extends ChangeNotifier {
     String folderId = '',
     String status = 'todo',
     String notes = '',
+    String? taskDate,
   }) async {
     final task = Task(
       title: title,
@@ -139,6 +141,7 @@ class AppProvider extends ChangeNotifier {
       folderId: folderId.isEmpty ? defaultFolderId : folderId,
       status: status,
       notes: notes,
+      taskDate: taskDate,
     );
     _tasks.insert(0, task);
     await _saveTasks();
@@ -185,11 +188,11 @@ class AppProvider extends ChangeNotifier {
   }
 
   List<Task> getTasksByDate(String dateStr) {
-    return _tasks.where((t) => t.createdAt == dateStr).toList();
+    return _tasks.where((t) => t.taskDate == dateStr).toList();
   }
 
   List<Task> getTasksByMonth(String monthKey) {
-    return _tasks.where((t) => t.createdAt.startsWith(monthKey)).toList();
+    return _tasks.where((t) => t.taskDate.startsWith(monthKey)).toList();
   }
 
   int getTaskCountByFolder(String folderId) {
@@ -213,16 +216,17 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deleteFolder(String id) async {
-    if (id == defaultFolderId) return;
-    // Move tasks to default folder
-    for (var i = 0; i < _tasks.length; i++) {
-      if (_tasks[i].folderId == id) {
-        _tasks[i] = _tasks[i].copyWith(folderId: defaultFolderId);
-      }
-    }
+  Future<bool> deleteFolder(String id) async {
+    if (id == defaultFolderId) return false;
+    if (getTaskCountByFolder(id) > 0) return false;
     _folders.removeWhere((f) => f.id == id);
     await _saveFolders();
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> deleteTasks(List<String> ids) async {
+    _tasks.removeWhere((t) => ids.contains(t.id));
     await _saveTasks();
     notifyListeners();
   }
@@ -249,6 +253,36 @@ class AppProvider extends ChangeNotifier {
     _settings = AppSettings();
     await _saveTasks();
     await _saveFolders();
+    await _saveSettings();
+    notifyListeners();
+  }
+
+  // ========== Tip ==========
+
+  bool get shouldShowTip {
+    if (!_initialized) return false;
+    final today = du.todayStr();
+    switch (_settings.tipMode) {
+      case 'forever':
+        return false;
+      case 'weekly':
+        if (_settings.lastTipDate == null) return true;
+        // 检查是否超过7天
+        try {
+          final last = DateTime.parse(_settings.lastTipDate!);
+          final diff = DateTime.now().difference(last).inDays;
+          return diff >= 7;
+        } catch (_) {
+          return true;
+        }
+      default: // 'daily'
+        return _settings.lastTipDate != today;
+    }
+  }
+
+  Future<void> dismissTip(String mode) async {
+    _settings.tipMode = mode;
+    _settings.lastTipDate = du.todayStr();
     await _saveSettings();
     notifyListeners();
   }
@@ -338,15 +372,15 @@ class AppProvider extends ChangeNotifier {
   List<Task> _filterByDate(List<Task> source, String filter) {
     switch (filter) {
       case '今天':
-        return source.where((t) => du.isToday(t.createdAt)).toList();
+        return source.where((t) => du.isToday(t.taskDate)).toList();
       case '昨天':
-        return source.where((t) => du.isYesterday(t.createdAt)).toList();
+        return source.where((t) => du.isYesterday(t.taskDate)).toList();
       case '近7天':
-        return source.where((t) => du.isWithinLast7Days(t.createdAt)).toList();
+        return source.where((t) => du.isWithinLast7Days(t.taskDate)).toList();
       case '本周':
-        return source.where((t) => du.isCurrentWeek(t.createdAt)).toList();
+        return source.where((t) => du.isCurrentWeek(t.taskDate)).toList();
       case '本月':
-        return source.where((t) => du.isCurrentMonth(t.createdAt)).toList();
+        return source.where((t) => du.isCurrentMonth(t.taskDate)).toList();
       default:
         return source;
     }
@@ -377,7 +411,7 @@ class AppProvider extends ChangeNotifier {
     return _tasks.where((t) {
       if (t.status != 'done') return false;
       try {
-        final date = DateTime.parse(t.createdAt);
+        final date = DateTime.parse(t.taskDate);
         return !date.isBefore(monday);
       } catch (_) {
         return false;
@@ -388,7 +422,7 @@ class AppProvider extends ChangeNotifier {
   int get monthDone {
     final monthKey = du.currentMonthStr();
     return _tasks
-        .where((t) => t.status == 'done' && t.createdAt.startsWith(monthKey))
+        .where((t) => t.status == 'done' && t.taskDate.startsWith(monthKey))
         .length;
   }
 
@@ -397,7 +431,7 @@ class AppProvider extends ChangeNotifier {
   Map<String, List<Task>> get groupedByDate {
     final map = <String, List<Task>>{};
     for (final task in _tasks) {
-      final key = du.getDateGroupKey(task.createdAt);
+      final key = du.getDateGroupKey(task.taskDate);
       map.putIfAbsent(key, () => []);
       map[key]!.add(task);
     }

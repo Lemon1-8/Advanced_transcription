@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 class TaskCard extends StatelessWidget {
   final Task task;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final bool showFolder;
   final bool showDate;
 
@@ -14,6 +15,7 @@ class TaskCard extends StatelessWidget {
     super.key,
     required this.task,
     this.onTap,
+    this.onLongPress,
     this.showFolder = true,
     this.showDate = true,
   });
@@ -64,6 +66,7 @@ class TaskCard extends StatelessWidget {
   Widget _buildCard(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(

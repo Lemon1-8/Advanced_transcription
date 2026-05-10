@@ -159,7 +159,6 @@ class SettingPage extends StatelessWidget {
             children: [
               PageHeader(
                 title: '设置',
-                desc: '第一版保持简单，不加入账号系统',
                 showBack: false,
               ),
               const SizedBox(height: 8),
@@ -234,7 +233,8 @@ class SettingPage extends StatelessWidget {
                   children: [
                     SettingsRow(
                       label: '默认首页',
-                      value: '今日任务',
+                      value: _tabLabel(settings.defaultTab),
+                      onTap: () => _showDefaultTabPicker(context, settings),
                     ),
                     SettingsRow(
                       label: '任务排序',
@@ -250,6 +250,9 @@ class SettingPage extends StatelessWidget {
                         final updated = AppSettings(
                           sortOrder: settings.sortOrder,
                           deleteConfirm: !settings.deleteConfirm,
+                          defaultTab: settings.defaultTab,
+                          tipMode: settings.tipMode,
+                          lastTipDate: settings.lastTipDate,
                         );
                         provider.updateSettings(updated);
                       },
@@ -315,6 +318,58 @@ class SettingPage extends StatelessWidget {
     );
   }
 
+  String _tabLabel(int index) {
+    const labels = ['首页', '分类', '日期', '统计', '设置'];
+    return index >= 0 && index < labels.length ? labels[index] : '首页';
+  }
+
+  void _showDefaultTabPicker(BuildContext context, AppSettings current) {
+    const tabs = ['首页', '分类', '日期', '统计', '设置'];
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                '默认首页',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A)),
+              ),
+            ),
+            ...List.generate(tabs.length, (i) {
+              return ListTile(
+                title: Text(tabs[i]),
+                trailing: current.defaultTab == i
+                    ? const Icon(Icons.check, color: Color(0xFF4F46E5))
+                    : null,
+                onTap: () {
+                  context.read<AppProvider>().updateSettings(
+                        AppSettings(
+                          sortOrder: current.sortOrder,
+                          deleteConfirm: current.deleteConfirm,
+                          defaultTab: i,
+                          tipMode: current.tipMode,
+                          lastTipDate: current.lastTipDate,
+                        ),
+                      );
+                  Navigator.of(ctx).pop();
+                },
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showSortPicker(BuildContext context, AppSettings current) {
     showModalBottomSheet(
       context: context,
@@ -346,6 +401,9 @@ class SettingPage extends StatelessWidget {
                         AppSettings(
                           sortOrder: sortOptions[i],
                           deleteConfirm: current.deleteConfirm,
+                          defaultTab: current.defaultTab,
+                          tipMode: current.tipMode,
+                          lastTipDate: current.lastTipDate,
                         ),
                       );
                   Navigator.of(ctx).pop();

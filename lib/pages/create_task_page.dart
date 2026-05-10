@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/task.dart';
 import '../models/folder.dart';
+import '../models/task_history.dart';
 import '../providers/app_provider.dart';
 import '../utils/constants.dart';
+import '../utils/date_utils.dart' as du;
 
 class CreateTaskPage extends StatefulWidget {
   const CreateTaskPage({super.key});
@@ -18,6 +20,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
   late TextEditingController _notesController;
   late TextEditingController _categoryController;
   late String _status;
+  late String _taskDate;
   bool _saving = false;
   Task? _existingTask;
   bool _initialized = false;
@@ -38,6 +41,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
     _notesController = TextEditingController();
     _categoryController = TextEditingController(text: '未分类');
     _status = 'todo';
+    _taskDate = du.todayStr();
     _titleFocusNode.addListener(() => _onFieldFocus(_titleFocusNode));
     _descFocusNode.addListener(() => _onFieldFocus(_descFocusNode));
     _notesFocusNode.addListener(() => _onFieldFocus(_notesFocusNode));
@@ -61,6 +65,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
           final folder = provider.getFolderById(task.folderId);
           _categoryController.text = folder?.name ?? '未分类';
           _status = task.status;
+          _taskDate = task.taskDate;
         }
       }
     }
@@ -115,14 +120,48 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
     final provider = context.read<AppProvider>();
     final folderId = await _resolveFolderId();
     if (_isEditing) {
-      final updated = _existingTask!.copyWith(
-        title: _titleController.text,
-        description: _descController.text,
-        folderId: folderId,
-        status: _status,
-        notes: _notesController.text,
-      );
-      await provider.updateTask(updated);
+      final existing = _existingTask!;
+      final changes = <String, dynamic>{};
+      if (_titleController.text != existing.title) {
+        changes['title'] = _titleController.text;
+      }
+      if (_descController.text != existing.description) {
+        changes['description'] = _descController.text;
+      }
+      if (folderId != existing.folderId) {
+        changes['folderId'] = folderId;
+      }
+      if (_status != existing.status) {
+        changes['status'] = _status;
+      }
+      if (_notesController.text != existing.notes) {
+        changes['notes'] = _notesController.text;
+      }
+      if (_taskDate != existing.taskDate) {
+        changes['taskDate'] = _taskDate;
+      }
+
+      if (changes.isNotEmpty) {
+        final historyEntry = TaskHistory(
+          updatedAt: DateTime.now().toIso8601String(),
+          title: changes.containsKey('title') ? changes['title'] as String? : null,
+          description: changes.containsKey('description') ? changes['description'] as String? : null,
+          folderId: changes.containsKey('folderId') ? changes['folderId'] as String? : null,
+          status: changes.containsKey('status') ? changes['status'] as String? : null,
+          notes: changes.containsKey('notes') ? changes['notes'] as String? : null,
+          taskDate: changes.containsKey('taskDate') ? changes['taskDate'] as String? : null,
+        );
+        final updated = existing.copyWith(
+          title: _titleController.text,
+          description: _descController.text,
+          folderId: folderId,
+          status: _status,
+          notes: _notesController.text,
+          taskDate: _taskDate,
+          history: [...existing.history, historyEntry],
+        );
+        await provider.updateTask(updated);
+      }
     } else {
       await provider.addTask(
         title: _titleController.text,
@@ -130,6 +169,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
         folderId: folderId,
         status: _status,
         notes: _notesController.text,
+        taskDate: _taskDate,
       );
     }
     if (mounted) Navigator.of(context).pop();
@@ -150,12 +190,26 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
     final folders = provider.folders;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFFFBF7),
       appBar: AppBar(
         title: Text(_isEditing ? '编辑任务' : '新建任务'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _autoSaveAndPop,
         ),
+        foregroundColor: const Color(0xFFE8833A),
+        actions: _isEditing
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.history),
+                  tooltip: '历史记录',
+                  onPressed: () => Navigator.of(context).pushNamed(
+                    '/task-history',
+                    arguments: _existingTask!.id,
+                  ),
+                ),
+              ]
+            : null,
       ),
       body: PopScope(
         canPop: false,
@@ -172,7 +226,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
               const SizedBox(height: 4),
               const Text(
                 '默认状态为未完成，创建日期由系统自动记录。',
-                style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                style: TextStyle(fontSize: 13, color: Color(0xFF8B7355)),
               ),
               const SizedBox(height: 20),
               _buildLabel('任务标题'),
@@ -182,9 +236,9 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                 focusNode: _titleFocusNode,
                 decoration: InputDecoration(
                   hintText: '例如：完成毕业设计需求分析',
-                  hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                  hintStyle: const TextStyle(color: Color(0xFFC4A882)),
                   filled: true,
-                  fillColor: const Color(0xFFF1F5F9),
+                  fillColor: const Color(0xFFFFF2E6),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none,
@@ -199,12 +253,14 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
               TextField(
                 controller: _descController,
                 focusNode: _descFocusNode,
-                maxLines: 3,
+                minLines: 3,
+                maxLines: null,
+                textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: '补充任务说明、完成要求或备注...',
-                  hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                  hintStyle: const TextStyle(color: Color(0xFFC4A882)),
                   filled: true,
-                  fillColor: const Color(0xFFF1F5F9),
+                  fillColor: const Color(0xFFFFF2E6),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none,
@@ -216,25 +272,23 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
               const SizedBox(height: 12),
               _buildCategoryField(folders, _categoryFocusNode),
               const SizedBox(height: 12),
-              _buildDropdown(
-                label: '任务状态',
-                value: _statusLabel(_status),
-                items: const ['未完成', '已完成', '部分完成'],
-                onSelected: (label) {
-                  setState(() => _status = _statusValue(label));
-                },
-              ),
+              _buildStatusField(),
+              const SizedBox(height: 12),
+              _buildDateField(),
               const SizedBox(height: 12),
               _buildLabel('备注'),
               const SizedBox(height: 6),
               TextField(
                 controller: _notesController,
                 focusNode: _notesFocusNode,
+                minLines: 3,
+                maxLines: null,
+                textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: '可填写完成情况或其他说明',
-                  hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                  hintStyle: const TextStyle(color: Color(0xFFC4A882)),
                   filled: true,
-                  fillColor: const Color(0xFFF1F5F9),
+                  fillColor: const Color(0xFFFFF2E6),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none,
@@ -256,7 +310,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
       style: const TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF64748B),
+        color: Color(0xFF8B7355),
       ),
     );
   }
@@ -269,7 +323,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
+            color: const Color(0xFFFFF2E6),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(
@@ -291,16 +345,43 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
               ),
               PopupMenuButton<String>(
                 icon: const Icon(Icons.arrow_drop_down,
-                    color: Color(0xFF4F46E5)),
+                    color: Color(0xFFE8833A)),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
                 onSelected: (name) {
                   _categoryController.text = name;
                 },
                 itemBuilder: (context) => folders.map((f) {
+                  final isSelected = f.name == _categoryController.text;
                   return PopupMenuItem(
                     value: f.name,
-                    child: Text(f.name),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.folder_outlined,
+                          size: 18,
+                          color: isSelected
+                              ? const Color(0xFFE8833A)
+                              : const Color(0xFF94A3B8),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          f.name,
+                          style: TextStyle(
+                            fontWeight:
+                                isSelected ? FontWeight.w600 : FontWeight.normal,
+                            color: isSelected
+                                ? const Color(0xFFE8833A)
+                                : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        if (isSelected) ...[
+                          const Spacer(),
+                          const Icon(Icons.check,
+                              size: 16, color: Color(0xFFE8833A)),
+                        ],
+                      ],
+                    ),
                   );
                 }).toList(),
               ),
@@ -311,38 +392,62 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
     );
   }
 
-  Widget _buildDropdown({
-    required String label,
-    required String value,
-    required List<String> items,
-    required ValueChanged<String> onSelected,
-  }) {
+  Widget _buildStatusField() {
+    const items = [
+      ('todo', '未完成', Icons.radio_button_unchecked),
+      ('done', '已完成', Icons.check_circle_outline),
+      ('partial', '部分完成', Icons.remove_circle_outline),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildLabel(label),
+        _buildLabel('任务状态'),
         const SizedBox(height: 6),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
+            color: const Color(0xFFFFF2E6),
             borderRadius: BorderRadius.circular(14),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: items.contains(value) ? value : items.first,
+              value: _status,
               isExpanded: true,
+              icon: const Icon(Icons.expand_more,
+                  color: Color(0xFFE8833A)),
+              borderRadius: BorderRadius.circular(14),
               items: items.map((item) {
+                final (value, label, icon) = item;
+                final isSelected = value == _status;
                 return DropdownMenuItem(
-                  value: item,
-                  child: Text(item,
-                      style: const TextStyle(
+                  value: value,
+                  child: Row(
+                    children: [
+                      Icon(
+                        icon,
+                        size: 20,
+                        color: isSelected
+                            ? const Color(0xFFE8833A)
+                            : const Color(0xFF94A3B8),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        label,
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF4F46E5))),
+                          fontSize: 14,
+                          color: isSelected
+                              ? const Color(0xFFE8833A)
+                              : const Color(0xFF0F172A),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               }).toList(),
               onChanged: (v) {
-                if (v != null) onSelected(v);
+                if (v != null) setState(() => _status = v);
               },
             ),
           ),
@@ -351,29 +456,74 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
     );
   }
 
-  String _statusLabel(String value) {
-    switch (value) {
-      case 'todo':
-        return '未完成';
-      case 'done':
-        return '已完成';
-      case 'partial':
-        return '部分完成';
-      default:
-        return '未完成';
-    }
+  Widget _buildDateField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel('执行日期'),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: _pickDate,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF2E6),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined,
+                    size: 18, color: Color(0xFFE8833A)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    du.formatDate(_taskDate),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                ),
+                if (_taskDate != du.todayStr())
+                  GestureDetector(
+                    onTap: () {
+                      setState(() => _taskDate = du.todayStr());
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Icon(Icons.close,
+                          size: 14, color: Color(0xFF94A3B8)),
+                    ),
+                  ),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_drop_down,
+                    color: Color(0xFFE8833A)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
-  String _statusValue(String label) {
-    switch (label) {
-      case '未完成':
-        return 'todo';
-      case '已完成':
-        return 'done';
-      case '部分完成':
-        return 'partial';
-      default:
-        return 'todo';
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final current = DateTime.tryParse(_taskDate) ?? now;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2035),
+    );
+    if (picked != null) {
+      final formatted =
+          '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+      setState(() => _taskDate = formatted);
     }
   }
 }
