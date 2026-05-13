@@ -404,6 +404,24 @@ class AppProvider extends ChangeNotifier {
     return todayDone / todayTotal;
   }
 
+  List<Task> get yesterdayTasks {
+    final yesterday = du.yesterdayStr();
+    return _tasks.where((t) => t.taskDate == yesterday).toList();
+  }
+
+  int get yesterdayTotal => yesterdayTasks.length;
+  int get yesterdayDone =>
+      yesterdayTasks.where((t) => t.status == 'done').length;
+  int get yesterdayTodo =>
+      yesterdayTasks.where((t) => t.status == 'todo').length;
+  int get yesterdayPartial =>
+      yesterdayTasks.where((t) => t.status == 'partial').length;
+
+  double get yesterdayCompletionRate {
+    if (yesterdayTotal == 0) return 0;
+    return yesterdayDone / yesterdayTotal;
+  }
+
   int get weekDone {
     final now = DateTime.now();
     final weekday = now.weekday;

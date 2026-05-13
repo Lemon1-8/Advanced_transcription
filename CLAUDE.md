@@ -13,7 +13,7 @@ Flutter 本地 Todo 应用，采用 **Provider + Hive** 架构。所有数据仅
 - Hive 2.x（本地持久化，JSON 序列化）
 - uuid（任务/文件夹 ID 生成）
 - intl（日期格式化）
-- share_plus + file_picker + path_provider（数据导出/导入）
+- share_plus + file_picker + path_provider（数据导出/导入 + 任务图片分享）
 
 ## 常用命令
 
@@ -53,6 +53,15 @@ todo → done → partial → todo （getNextStatus()）
 - 点击任务卡片的 StatusMark 触发 `toggleStatus()`
 - 状态字符串 'todo' / 'done' / 'partial' 映射到 '未完成' / '已完成' / '部分完成'
 
+### 首页统计卡片（轮播）
+
+- `_buildStatsCard`：毛玻璃暖色卡片（`#FFF2E6` → `#FFE4CC`），圆角 18px，白边框
+- 右上角「今日/昨日」分段按钮，选中为橙色浅底
+- 通过 `PageController` + `PageView` 实现左右滑动 + 自动轮播（4 秒间隔）
+- 左侧：52px 环形进度圈（橙色 `#E8833A`）+ 中心百分比
+- 右侧：「X 个任务，X 已完成」+ 未完成/部分完成迷你胶囊
+- 数据来源：`AppProvider.today*` 和 `AppProvider.yesterday*` 两组 getter
+
 ### 编辑保存流程（含历史记录）
 
 ```
@@ -66,6 +75,22 @@ CreateTaskPage._save()
 - 编辑页用 `PopScope` 拦截返回，自动保存
 - 没有字段变化时不新增历史记录
 - `TaskHistory.updatedAt` 使用 ISO datetime，`changedFields` 仅显示非 null 字段
+- 历史列表每个条目显示「字段: 修改后的值」（如「标题: 完成毕设」），单行截断，替代原有纯字段名 chips
+
+### 任务图片分享
+
+```
+TaskCard 分享按钮 / CreateTaskPage AppBar 分享按钮
+→ showShareTaskDialog() 弹出预览 → 点击「分享」
+→ captureWidget() 截取 ShareableTaskCard 为 PNG
+→ saveToTemp() + Share.shareXFiles() 系统分享
+→ 分享完成后弹出对话框询问是否保存至本地
+→ 确认则 saveToDocuments() 保存到 {documents}/images/
+```
+
+- `ShareableTaskCard` 为独立的分享用卡片组件（暖色渐变底 320px 宽），非截屏已有页面
+- `captureWidget()` 通过 `RenderRepaintBoundary.toImage()` 渲染为 3x 像素比 PNG
+- 分享功能在首页任务列表、新建页、编辑页均可用
 
 ### 微信导入（Android Intent）
 
@@ -86,13 +111,15 @@ lib/
 │   ├── folder.dart             # Folder
 │   └── app_settings.dart       # AppSettings（排序方式/删除确认/默认首页/提示设置）
 ├── providers/
-│   └── app_provider.dart       # 全局状态：CRUD + 搜索/筛选 + 统计 + 导入导出 + 提示控制
+│   └── app_provider.dart       # 全局状态：CRUD + 搜索/筛选 + 今天/昨天统计 + 导入导出 + 提示控制
 ├── pages/                      # 每个页面一个文件，通过命名路由跳转
-├── widgets/                    # UI 组件
+├── widgets/                    # UI 组件（TaskCard / StatusMark / ShareableTaskCard 等）
 └── utils/
     ├── constants.dart          # 常量、状态映射、getNextStatus()
-    ├── date_utils.dart         # 日期判定和格式化
-    └── intent_handler.dart     # Android intent 文件接收
+    ├── date_utils.dart         # 日期判定和格式化（todayStr / yesterdayStr / isYesterday / formatDate 等）
+    ├── intent_handler.dart     # Android intent 文件接收
+    ├── share_utils.dart        # 截图工具（captureWidget / saveToTemp / saveToDocuments）
+    └── share_dialog.dart       # 分享对话框流程（预览 → 截图 → 系统分享 → 询问保存）
 ```
 
 ## 常见开发场景

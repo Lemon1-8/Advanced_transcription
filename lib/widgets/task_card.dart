@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/task.dart';
 import '../providers/app_provider.dart';
+import '../utils/share_dialog.dart';
 import 'status_mark.dart';
 import 'package:provider/provider.dart';
 
@@ -152,6 +153,26 @@ class TaskCard extends StatelessWidget {
                     ],
                   ),
                 ],
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                final provider = context.read<AppProvider>();
+                final folder =
+                    provider.getFolderById(task.folderId);
+                showShareTaskDialog(
+                  context,
+                  task: task,
+                  folderName: folder?.name ?? '未分类',
+                );
+              },
+              child: const Padding(
+                padding: EdgeInsets.only(top: 4, left: 8, right: 4),
+                child: Icon(
+                  Icons.ios_share,
+                  size: 18,
+                  color: Color(0xFF94A3B8),
+                ),
               ),
             ),
             const Padding(

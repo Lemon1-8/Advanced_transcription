@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
@@ -17,16 +18,33 @@ class _HomePageState extends State<HomePage> {
   late TextEditingController _keywordController;
   int _lastTabVersion = 0;
 
+  late PageController _statsPageController;
+  late Timer _statsTimer;
+  int _statsPageIndex = 0;
+
   @override
   void initState() {
     super.initState();
     _keywordController = TextEditingController();
     _lastTabVersion = context.read<AppProvider>().tabTapVersion;
+    _statsPageController = PageController(initialPage: 0);
+    _statsTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (_statsPageController.hasClients && mounted) {
+        final next = _statsPageIndex == 0 ? 1 : 0;
+        _statsPageController.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     _keywordController.dispose();
+    _statsTimer.cancel();
+    _statsPageController.dispose();
     super.dispose();
   }
 
@@ -367,133 +385,195 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildStatsCard(AppProvider provider) {
-    final now = DateTime.now();
-    final total = provider.todayTotal;
-    final done = provider.todayDone;
-    final todo = provider.todayTodo;
-    final partial = provider.todayPartial;
-    final rate = provider.todayCompletionRate;
-
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(12, 8, 8, 10),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFD946EF)],
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFFFFF2E6).withValues(alpha: 0.75),
+            const Color(0xFFFFE4CC).withValues(alpha: 0.5),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6366F1).withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: const Color(0xFFE8833A).withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '今日任务',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '今天 · ${now.month}月${now.day}日',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$total 个 · $done 已完成',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      '${(rate * 100).toInt()}%',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const Text(
-                      '完成率',
-                      style: TextStyle(fontSize: 10, color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ),
+              _smallSegment('今日', 0),
+              _smallSegment('昨日', 1),
             ],
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _statItem(done.toString(), '已完成'),
-              _statItem(todo.toString(), '未完成'),
-              _statItem(partial.toString(), '部分完成'),
-            ],
+          const SizedBox(height: 2),
+          SizedBox(
+            height: 62,
+            child: PageView(
+              controller: _statsPageController,
+              onPageChanged: (i) => setState(() => _statsPageIndex = i),
+              children: [
+                _buildCardContent(
+                  total: provider.todayTotal,
+                  done: provider.todayDone,
+                  todo: provider.todayTodo,
+                  partial: provider.todayPartial,
+                  rate: provider.todayCompletionRate,
+                ),
+                _buildCardContent(
+                  total: provider.yesterdayTotal,
+                  done: provider.yesterdayDone,
+                  todo: provider.yesterdayTodo,
+                  partial: provider.yesterdayPartial,
+                  rate: provider.yesterdayCompletionRate,
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _statItem(String value, String label) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 3),
-        padding: const EdgeInsets.symmetric(vertical: 5),
+  Widget _smallSegment(String label, int pageIndex) {
+    final active = _statsPageIndex == pageIndex;
+    return GestureDetector(
+      onTap: () {
+        _statsPageController.animateToPage(
+          pageIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(12),
+          color: active
+              ? const Color(0xFFE8833A).withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
         ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.white70,
-              ),
-            ),
-          ],
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: active ? const Color(0xFFE8833A) : const Color(0xFF94A3B8),
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCardContent({
+    required int total,
+    required int done,
+    required int todo,
+    required int partial,
+    required double rate,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 52,
+          height: 52,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 52,
+                height: 52,
+                child: CircularProgressIndicator(
+                  value: rate == 0 ? 0.001 : rate,
+                  strokeWidth: 5,
+                  strokeCap: StrokeCap.round,
+                  color: const Color(0xFFE8833A),
+                  backgroundColor:
+                      const Color(0xFFE8833A).withValues(alpha: 0.1),
+                ),
+              ),
+              Text(
+                '${(rate * 100).toInt()}%',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFFE8833A),
+                  height: 1,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '$total 个任务，$done 已完成',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF7C2D12),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _miniStat('$todo', '未完成', const Color(0xFF64748B)),
+                  const SizedBox(width: 4),
+                  _miniStat('$partial', '部分', const Color(0xFFD97706)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _miniStat(String value, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: color,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 8,
+              color: color.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

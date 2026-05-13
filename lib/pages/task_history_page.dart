@@ -78,8 +78,8 @@ class TaskHistoryPage extends StatelessWidget {
   Widget _buildHistoryCard(
       BuildContext context, TaskHistory entry, Task task, bool isLatest) {
     final time = _formatTime(entry.updatedAt);
-    final fields = entry.changedFields;
     final date = _formatDate(entry.updatedAt);
+    final provider = context.read<AppProvider>();
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
@@ -150,7 +150,7 @@ class TaskHistoryPage extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                _buildChangeChips(fields),
+                _buildChangedContent(entry, provider),
               ],
             ),
           ),
@@ -168,28 +168,49 @@ class TaskHistoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildChangeChips(List<String> fields) {
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: fields.map((field) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFEF3C7),
-            borderRadius: BorderRadius.circular(8),
-          ),
+  Widget _buildChangedContent(TaskHistory entry, AppProvider provider) {
+    final lines = <String>[];
+    if (entry.title != null) lines.add('标题: ${entry.title}');
+    if (entry.description != null) lines.add('描述: ${entry.description}');
+    if (entry.folderId != null) {
+      final folder = provider.getFolderById(entry.folderId!);
+      lines.add('分类: ${folder?.name ?? entry.folderId}');
+    }
+    if (entry.status != null) lines.add('状态: ${_statusLabel(entry.status!)}');
+    if (entry.notes != null) lines.add('备注: ${entry.notes}');
+    if (entry.taskDate != null) {
+      lines.add('执行日期: ${du.formatDate(entry.taskDate!)}');
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: lines.map((line) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 4),
           child: Text(
-            field,
+            line,
             style: const TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF92400E),
+              color: Color(0xFF475569),
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         );
       }).toList(),
     );
+  }
+
+  String _statusLabel(String value) {
+    switch (value) {
+      case 'todo':
+        return '未完成';
+      case 'done':
+        return '已完成';
+      case 'partial':
+        return '部分完成';
+      default:
+        return value;
+    }
   }
 
   String _formatTime(String iso) {

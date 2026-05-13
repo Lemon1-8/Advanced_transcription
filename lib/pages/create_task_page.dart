@@ -6,6 +6,7 @@ import '../models/task_history.dart';
 import '../providers/app_provider.dart';
 import '../utils/constants.dart';
 import '../utils/date_utils.dart' as du;
+import '../utils/share_dialog.dart';
 
 class CreateTaskPage extends StatefulWidget {
   const CreateTaskPage({super.key});
@@ -175,6 +176,25 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
     if (mounted) Navigator.of(context).pop();
   }
 
+  Future<void> _shareTask() async {
+    final task = Task(
+      title: _titleController.text,
+      description: _descController.text,
+      folderId: _existingTask?.folderId ?? defaultFolderId,
+      status: _status,
+      notes: _notesController.text,
+      taskDate: _taskDate,
+      createdAt: _existingTask?.createdAt ?? DateTime.now().toIso8601String(),
+    );
+    final provider = context.read<AppProvider>();
+    final folder = provider.getFolderById(task.folderId);
+    await showShareTaskDialog(
+      context,
+      task: task,
+      folderName: folder?.name ?? '未分类',
+    );
+  }
+
   Future<void> _autoSaveAndPop() async {
     if (_saving) return;
     if (_hasContent) {
@@ -198,18 +218,22 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
           onPressed: _autoSaveAndPop,
         ),
         foregroundColor: const Color(0xFFE8833A),
-        actions: _isEditing
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.history),
-                  tooltip: '历史记录',
-                  onPressed: () => Navigator.of(context).pushNamed(
-                    '/task-history',
-                    arguments: _existingTask!.id,
-                  ),
-                ),
-              ]
-            : null,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.ios_share_outlined),
+            tooltip: '分享任务',
+            onPressed: _shareTask,
+          ),
+          if (_isEditing)
+            IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: '历史记录',
+              onPressed: () => Navigator.of(context).pushNamed(
+                '/task-history',
+                arguments: _existingTask!.id,
+              ),
+            ),
+        ],
       ),
       body: PopScope(
         canPop: false,
