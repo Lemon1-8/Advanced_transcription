@@ -109,3 +109,24 @@ String getDateGroupKey(String yyyyMmDd) {
 String formatDateTime(DateTime dt) {
   return DateFormat('yyyy年MM月dd日 HH:mm').format(dt);
 }
+
+/// Format an ISO datetime string to time only (HH:mm).
+String formatIsoTime(String iso) {
+  try {
+    final dt = DateTime.parse(iso);
+    return formatDateTime(dt);
+  } catch (_) {
+    return iso;
+  }
+}
+
+/// Format an ISO datetime string to date only (X年X月X日).
+String formatIsoDate(String iso) {
+  try {
+    final dt = DateTime.parse(iso);
+    return formatDate(
+        '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}');
+  } catch (_) {
+    return iso;
+  }
+}

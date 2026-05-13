@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/task.dart';
 import '../models/task_history.dart';
 import '../providers/app_provider.dart';
+import '../utils/constants.dart';
 import '../utils/date_utils.dart' as du;
 
 class TaskHistoryPage extends StatelessWidget {
@@ -77,8 +78,8 @@ class TaskHistoryPage extends StatelessWidget {
 
   Widget _buildHistoryCard(
       BuildContext context, TaskHistory entry, Task task, bool isLatest) {
-    final time = _formatTime(entry.updatedAt);
-    final date = _formatDate(entry.updatedAt);
+    final time = du.formatIsoTime(entry.updatedAt);
+    final date = du.formatIsoDate(entry.updatedAt);
     final provider = context.read<AppProvider>();
 
     return Container(
@@ -169,66 +170,65 @@ class TaskHistoryPage extends StatelessWidget {
   }
 
   Widget _buildChangedContent(TaskHistory entry, AppProvider provider) {
-    final lines = <String>[];
-    if (entry.title != null) lines.add('标题: ${entry.title}');
-    if (entry.description != null) lines.add('描述: ${entry.description}');
-    if (entry.folderId != null) {
-      final folder = provider.getFolderById(entry.folderId!);
-      lines.add('分类: ${folder?.name ?? entry.folderId}');
+    final lines = <Widget>[];
+    _addLine(lines, entry.titleChangeType, '标题', entry.titleBefore, entry.titleAfter, (v) => v);
+    _addLine(lines, entry.descriptionChangeType, '描述', entry.descriptionBefore, entry.descriptionAfter, (v) => v);
+    if (entry.folderIdChangeType != null) {
+      final beforeName = entry.folderIdBefore != null
+          ? (provider.getFolderById(entry.folderIdBefore!)?.name ?? entry.folderIdBefore)
+          : null;
+      final afterName = entry.folderIdAfter != null
+          ? (provider.getFolderById(entry.folderIdAfter!)?.name ?? entry.folderIdAfter)
+          : null;
+      _addLine(lines, entry.folderIdChangeType, '分类', beforeName, afterName, (v) => v ?? '');
     }
-    if (entry.status != null) lines.add('状态: ${_statusLabel(entry.status!)}');
-    if (entry.notes != null) lines.add('备注: ${entry.notes}');
-    if (entry.taskDate != null) {
-      lines.add('执行日期: ${du.formatDate(entry.taskDate!)}');
+    if (entry.statusChangeType != null) {
+      _addLine(lines, entry.statusChangeType, '状态',
+          entry.statusBefore != null ? getStatusLabel(entry.statusBefore!) : null,
+          entry.statusAfter != null ? getStatusLabel(entry.statusAfter!) : null,
+          (v) => v ?? '');
+    }
+    _addLine(lines, entry.notesChangeType, '备注', entry.notesBefore, entry.notesAfter, (v) => v);
+    if (entry.taskDateChangeType != null) {
+      _addLine(lines, entry.taskDateChangeType, '执行日期',
+          entry.taskDateBefore != null ? du.formatDate(entry.taskDateBefore!) : null,
+          entry.taskDateAfter != null ? du.formatDate(entry.taskDateAfter!) : null,
+          (v) => v ?? '');
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: lines.map((line) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 4),
-          child: Text(
-            line,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF475569),
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        );
-      }).toList(),
+      children: lines,
     );
   }
 
-  String _statusLabel(String value) {
-    switch (value) {
-      case 'todo':
-        return '未完成';
-      case 'done':
-        return '已完成';
-      case 'partial':
-        return '部分完成';
-      default:
-        return value;
-    }
+  void _addLine(
+      List<Widget> lines, FieldChangeType? changeType, String fieldName,
+      String? before, String? after, String? Function(String?) fmt) {
+    if (changeType == null) return;
+    final text = switch (changeType) {
+      FieldChangeType.added => '$fieldName: [新增] ${fmt(after) ?? ''}',
+      FieldChangeType.modified =>
+        '$fieldName: ${fmt(before) ?? ''} → ${fmt(after) ?? ''}',
+      FieldChangeType.cleared => '$fieldName: [已清空] ${fmt(before) ?? ''}',
+    };
+    lines.add(
+      Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 12,
+            color: changeType == FieldChangeType.added
+                ? const Color(0xFF16A34A)
+                : changeType == FieldChangeType.modified
+                    ? const Color(0xFF475569)
+                    : const Color(0xFF94A3B8),
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
   }
 
-  String _formatTime(String iso) {
-    try {
-      final dt = DateTime.parse(iso);
-      return du.formatDateTime(dt);
-    } catch (_) {
-      return iso;
-    }
-  }
-
-  String _formatDate(String iso) {
-    try {
-      final dt = DateTime.parse(iso);
-      return du.formatDate(
-          '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}');
-    } catch (_) {
-      return iso;
-    }
-  }
 }

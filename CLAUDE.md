@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-Flutter 本地 Todo 应用，采用 **Provider + Hive** 架构。所有数据仅保存在本机，无需登录。
+Flutter 本地任务管理应用"你的强"，采用 **Provider + Hive** 架构。所有数据仅保存在本机，无需登录。核心能力：任务 CRUD + 三态切换 + 修改历史追溯 + 任务图片分享 + 数据导入导出 + 多维度统计。
 
 ## 技术栈
 
@@ -67,28 +67,38 @@ todo → done → partial → todo （getNextStatus()）
 ```
 CreateTaskPage._save()
   → 逐字段对比旧值，收集有变化的字段
-  → 如有变化，构造 TaskHistory 实例记录变更的字段值（仅保留有变的字段）
+  → 如有变化，构造 TaskHistory 实例，同时存储 Before/After 值对（分别记录旧值和新值）
+    → 变更类型判断：Before 空 After 非空 = added（新增）；都非空 = modified（修改）；Before 非空 After 空 = cleared（清空）
   → task.history.add(historyEntry)
   → provider.updateTask(task)  // 更新内存 + 写 Hive
 ```
 
 - 编辑页用 `PopScope` 拦截返回，自动保存
 - 没有字段变化时不新增历史记录
-- `TaskHistory.updatedAt` 使用 ISO datetime，`changedFields` 仅显示非 null 字段
-- 历史列表每个条目显示「字段: 修改后的值」（如「标题: 完成毕设」），单行截断，替代原有纯字段名 chips
+- `TaskHistory` 每个字段存储 Before/After 值对，旧版单值格式自动兼容（映射为 After，Before 为 null）
+- 历史详情页：未修改字段通过遍历更老条目重建该时间点的值；已修改字段按 added/modified/cleared 三种类型展示
+- 列表页每条显示：`字段: [新增] 新值` / `字段: 旧值 → 新值` / `字段: [已清空] 旧值`
 
 ### 任务图片分享
 
 ```
 TaskCard 分享按钮 / CreateTaskPage AppBar 分享按钮
-→ showShareTaskDialog() 弹出预览 → 点击「分享」
-→ captureWidget() 截取 ShareableTaskCard 为 PNG
-→ saveToTemp() + Share.shareXFiles() 系统分享
-→ 分享完成后弹出对话框询问是否保存至本地
-→ 确认则 saveToDocuments() 保存到 {documents}/images/
+→ showShareTaskDialog()
+  → 第一阶段：弹出预览对话框（内嵌 ConstrainedBox + SingleChildScrollView + ShareableTaskCard，可滚动预览长内容）
+  → 用户点击「分享」→ Navigator.pop(true)
+  → 第二阶段：OverlayEntry 插入不受约束的完整 ShareableTaskCard → 等待渲染 → captureWidget() 截全高度 PNG
+  → 移除 OverlayEntry → saveToTemp() + Share.shareXFiles() 调起系统分享
+  → 分享完成后弹出对话框询问是否保存至本地
+  → 确认则 saveToDocuments() 保存到 {documents}/images/
 ```
 
-- `ShareableTaskCard` 为独立的分享用卡片组件（暖色渐变底 320px 宽），非截屏已有页面
+- 预览阶段卡片放在 `ConstrainedBox(maxHeight: 屏幕55%)` + `SingleChildScrollView` 中，解决长内容在对话框内被裁剪的问题
+- 截图阶段用 `OverlayEntry` 渲染完整卡片（不受对话框高度约束），实现"长截屏"效果
+- 截图完成后立即移除 OverlayEntry；截图失败在主页弹出 SnackBar 提示
+- 取消分享静默返回（不弹错误提示）
+- `CreateTaskPage._shareTask()` 先调 `_resolveFolderId()` 解析分类（与 `_save()` 一致），确保预览分类与表单当前输入同步
+- `ShareableTaskCard` 为独立卡片组件：水墨留白配色（`#E8E4DF` → `#F5F2ED` 淡墨渐变），320px 宽，圆角 24px
+- 标题/描述/备注均无 `maxLines` 限制，完整展示全文；信息行（分类/状态/日期）使用 `Wrap` 换行布局
 - `captureWidget()` 通过 `RenderRepaintBoundary.toImage()` 渲染为 3x 像素比 PNG
 - 分享功能在首页任务列表、新建页、编辑页均可用
 
@@ -99,6 +109,30 @@ TaskCard 分享按钮 / CreateTaskPage AppBar 分享按钮
 → FileIntentHandler → ImportHandler → showDialog 确认 → provider.importFromJsonString()
 ```
 
+### 启动提示弹窗
+
+```
+App 启动 → ImportHandler.didChangeDependencies()
+  → _checkTipAfterInit() → provider.shouldShowTip 判断
+    → daily（默认）：当天未提示过则弹出
+    → weekly：距上次提示 >= 7 天则弹出
+    → forever：永不弹出
+  → _showTipDialog() 显示欢迎对话框（barrierDismissible: false）
+    → 三个板块：注意事项 / App 亮点 / 使用技巧
+    → 三个按钮：「我知道了」（当天不再显示）/「一周内不再弹出」/「永远不再弹出」
+    → 按钮点击调用 provider.dismissTip('daily'|'weekly'|'forever') 更新 tipMode + lastTipDate
+```
+
+- `_TipSection` 组件（`app.dart` 内）统一渲染板块：图标 + 标题 + 项目符号列表
+
+### AppProvider 统计 getter
+
+- **今天/昨天**：`todayTotal` / `todayDone` / `todayTodo` / `todayPartial` / `todayCompletionRate`；`yesterday*` 同理
+- **本周/本月**：`weekDone` / `monthDone`
+- **全局**：`totalCount` / `doneCount` / `groupedByDate`（返回 `List<DateGroup>`）/ `dateGroups`（排序后的日期分组列表）
+- **筛选**：`searchTasks()` 按关键词/分类/状态/日期多条件筛选
+- **统计页**：`getTasksByMonth(year, month)` / `getTaskCountByFolder(folderId)`
+
 ## 项目结构要点
 
 ```
@@ -107,9 +141,9 @@ lib/
 ├── app.dart                    # MaterialApp + MainShell + ImportHandler
 ├── models/
 │   ├── task.dart               # Task（copyWith / toJson / fromJson / displayTitle）
-│   ├── task_history.dart       # 修改历史（仅记录有变的字段，null = 未变更）
+│   ├── task_history.dart       # 修改历史（Before/After 值对 + FieldChangeType 枚举）
 │   ├── folder.dart             # Folder
-│   └── app_settings.dart       # AppSettings（排序方式/删除确认/默认首页/提示设置）
+│   └── app_settings.dart       # AppSettings（排序/删除确认/默认首页/提示设置/lastTipDate）
 ├── providers/
 │   └── app_provider.dart       # 全局状态：CRUD + 搜索/筛选 + 今天/昨天统计 + 导入导出 + 提示控制
 ├── pages/                      # 每个页面一个文件，通过命名路由跳转

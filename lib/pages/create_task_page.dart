@@ -145,12 +145,18 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
       if (changes.isNotEmpty) {
         final historyEntry = TaskHistory(
           updatedAt: DateTime.now().toIso8601String(),
-          title: changes.containsKey('title') ? changes['title'] as String? : null,
-          description: changes.containsKey('description') ? changes['description'] as String? : null,
-          folderId: changes.containsKey('folderId') ? changes['folderId'] as String? : null,
-          status: changes.containsKey('status') ? changes['status'] as String? : null,
-          notes: changes.containsKey('notes') ? changes['notes'] as String? : null,
-          taskDate: changes.containsKey('taskDate') ? changes['taskDate'] as String? : null,
+          titleBefore: changes.containsKey('title') ? existing.title : null,
+          titleAfter: changes.containsKey('title') ? changes['title'] as String? : null,
+          descriptionBefore: changes.containsKey('description') ? existing.description : null,
+          descriptionAfter: changes.containsKey('description') ? changes['description'] as String? : null,
+          folderIdBefore: changes.containsKey('folderId') ? existing.folderId : null,
+          folderIdAfter: changes.containsKey('folderId') ? changes['folderId'] as String? : null,
+          statusBefore: changes.containsKey('status') ? existing.status : null,
+          statusAfter: changes.containsKey('status') ? changes['status'] as String? : null,
+          notesBefore: changes.containsKey('notes') ? existing.notes : null,
+          notesAfter: changes.containsKey('notes') ? changes['notes'] as String? : null,
+          taskDateBefore: changes.containsKey('taskDate') ? existing.taskDate : null,
+          taskDateAfter: changes.containsKey('taskDate') ? changes['taskDate'] as String? : null,
         );
         final updated = existing.copyWith(
           title: _titleController.text,
@@ -177,17 +183,19 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
   }
 
   Future<void> _shareTask() async {
+    final provider = context.read<AppProvider>();
+    final folderId = await _resolveFolderId();
+    if (!mounted) return;
+    final folder = provider.getFolderById(folderId);
     final task = Task(
       title: _titleController.text,
       description: _descController.text,
-      folderId: _existingTask?.folderId ?? defaultFolderId,
+      folderId: folderId,
       status: _status,
       notes: _notesController.text,
       taskDate: _taskDate,
       createdAt: _existingTask?.createdAt ?? DateTime.now().toIso8601String(),
     );
-    final provider = context.read<AppProvider>();
-    final folder = provider.getFolderById(task.folderId);
     await showShareTaskDialog(
       context,
       task: task,

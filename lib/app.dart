@@ -348,6 +348,7 @@ class _ImportHandlerState extends State<ImportHandler> {
                   '自由创建分类，灵活管理任务',
                   '三态状态切换：未完成 ✓ 已完成 ✓̶ 部分完成',
                   '支持数据导出分享，跨设备迁移',
+                  '任务以图片形式分享，信息一目了然',
                 ],
               ),
               SizedBox(height: 16),
