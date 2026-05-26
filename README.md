@@ -58,20 +58,20 @@ lib/
 
 ### 首页和搜索页面
 
-<img src="./result_image/微信图片_20260526161350_16_8.jpg" alt="微信图片_20260526161350_16_8" style="zoom: 33%;" /><img src="./result_image/微信图片_20260526161351_17_8.jpg" alt="微信图片_20260526161351_17_8" style="zoom: 33%;" />
+<img src="./result_image/微信图片_20260526161350_16_8.jpg" alt="微信图片_20260526161350_16_8" style="zoom: 25%;" /><img src="./result_image/微信图片_20260526161351_17_8.jpg" alt="微信图片_20260526161351_17_8" style="zoom: 25%;" />
 
 
 
-<img src="./result_image/微信图片_20260526161358_22_8.jpg" alt="微信图片_20260526161358_22_8" style="zoom:33%;" />
+<img src="./result_image/微信图片_20260526161358_22_8.jpg" alt="微信图片_20260526161358_22_8" style="zoom: 25%;" />
 
 ### 添加编辑和历史记录页面
 
-<img src="./result_image/微信图片_20260526162456_23_8.jpg" alt="微信图片_20260526162456_23_8" style="zoom:33%;" /><img src="./result_image/微信图片_20260526162456_24_8.jpg" alt="微信图片_20260526162456_24_8" style="zoom:33%;" />
+<img src="./result_image/微信图片_20260526162456_23_8.jpg" alt="微信图片_20260526162456_23_8" style="zoom: 25%;" /><img src="./result_image/微信图片_20260526162456_24_8.jpg" alt="微信图片_20260526162456_24_8" style="zoom: 25%;" />
 
 ### 分类日期分类页面
 
-<img src="./result_image/微信图片_20260526161352_18_8.jpg" alt="微信图片_20260526161352_18_8" style="zoom:33%;" /><img src="./result_image/微信图片_20260526161354_19_8.jpg" alt="微信图片_20260526161354_19_8" style="zoom:33%;" />
+<img src="./result_image/微信图片_20260526161352_18_8.jpg" alt="微信图片_20260526161352_18_8" style="zoom: 25%;" /><img src="./result_image/微信图片_20260526161354_19_8.jpg" alt="微信图片_20260526161354_19_8" style="zoom: 25%;" />
 
 ### 统计和设置页面
 
-<img src="./result_image/微信图片_20260526161355_20_8.jpg" alt="微信图片_20260526161355_20_8" style="zoom:33%;" /><img src="./result_image/微信图片_20260526161356_21_8.jpg" alt="微信图片_20260526161356_21_8" style="zoom:33%;" />
+<img src="./result_image/微信图片_20260526161355_20_8.jpg" alt="微信图片_20260526161355_20_8" style="zoom: 25%;" /><img src="./result_image/微信图片_20260526161356_21_8.jpg" alt="微信图片_20260526161356_21_8" style="zoom: 25%;" />
