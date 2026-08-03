@@ -43,7 +43,7 @@ class PageHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              if (actions != null) ...actions!,
+              ...?actions,
             ],
           ),
           if (desc != null)
