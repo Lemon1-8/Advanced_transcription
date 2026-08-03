@@ -67,7 +67,79 @@ class SettingPage extends StatelessWidget {
     }
   }
 
-  Future<void> _importData(BuildContext context) async {
+  Future<void> _showImportPicker(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                '导入数据',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.insert_drive_file_outlined),
+              title: const Text('从 JSON 文件恢复'),
+              subtitle: const Text('选择手机中的备份文件'),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _importFromJsonFile(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.chat_bubble_outline),
+              title: const Text('从微信中恢复'),
+              subtitle: const Text('从微信聊天中的备份文件打开本 App'),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _showWechatImportGuide(context);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showWechatImportGuide(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('从微信中恢复'),
+        content: const Text(
+          '请在微信聊天中找到备份 JSON 文件，点击文件后选择“用其他应用打开”，再选择“任务记录器”。\n\n如果文件已保存到手机，也可以直接选择本地 JSON 文件恢复。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('我知道了'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _importFromJsonFile(context);
+            },
+            child: const Text('选择 JSON 文件'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _importFromJsonFile(BuildContext context) async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -265,8 +337,8 @@ class SettingPage extends StatelessWidget {
                     ),
                     SettingsRow(
                       label: '导入数据',
-                      value: '从 JSON 文件恢复',
-                      onTap: () => _importData(context),
+                      value: 'JSON 文件 / 微信',
+                      onTap: () => _showImportPicker(context),
                     ),
                     const Divider(height: 1, color: Color(0xFFF1F5F9)),
                     SettingsRow(
