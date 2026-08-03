@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../widgets/page_header.dart';
 import '../widgets/empty_state.dart';
+import '../utils/date_utils.dart' as du;
 
 class DatePage extends StatelessWidget {
   const DatePage({super.key});
@@ -19,7 +20,7 @@ class DatePage extends StatelessWidget {
           children: [
             PageHeader(
               title: '日期记录',
-              desc: '系统自动按创建日期归档',
+              desc: '系统自动按任务日期归档',
               showBack: false,
             ),
             Expanded(
@@ -35,7 +36,6 @@ class DatePage extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final group = groups[index];
                         return _buildDateGroup(
-                          context,
                           group.label,
                           group.key,
                           group.totalCount,
@@ -60,7 +60,6 @@ class DatePage extends StatelessWidget {
   }
 
   Widget _buildDateGroup(
-    BuildContext context,
     String label,
     String key,
     int total,
@@ -100,11 +99,11 @@ class DatePage extends StatelessWidget {
                           color: Color(0xFF0F172A),
                         ),
                       ),
-                      if (key != 'today' && key != 'yesterday')
+                      if (du.getDateGroupSubLabel(key).isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            key.contains('-') ? key : '',
+                            du.getDateGroupSubLabel(key),
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF64748B),

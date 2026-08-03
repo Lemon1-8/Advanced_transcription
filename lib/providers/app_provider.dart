@@ -195,6 +195,31 @@ class AppProvider extends ChangeNotifier {
     return _tasks.where((t) => t.taskDate.startsWith(monthKey)).toList();
   }
 
+  List<Task> getTasksByDateGroupKey(String key) {
+    if (key.startsWith('day:')) {
+      return getTasksByDate(du.dateFromGroupKey(key));
+    }
+    if (key == 'week:this' || key == 'week:last') {
+      return _tasks
+          .where((t) => du.getDateGroupKey(t.taskDate) == key)
+          .toList();
+    }
+    if (key.startsWith('bucket-month:')) {
+      return _tasks
+          .where((t) => du.getDateGroupKey(t.taskDate) == key)
+          .toList();
+    }
+    if (key.startsWith('month:')) {
+      return getTasksByMonth(du.monthFromGroupKey(key));
+    }
+    if (key.startsWith('year:')) {
+      return _tasks
+          .where((t) => du.getDateGroupKey(t.taskDate) == key)
+          .toList();
+    }
+    return [];
+  }
+
   int getTaskCountByFolder(String folderId) {
     return _tasks.where((t) => t.folderId == folderId).length;
   }
@@ -460,26 +485,52 @@ class AppProvider extends ChangeNotifier {
     final grouped = groupedByDate;
     final keys = grouped.keys.toList();
 
-    // Sort: today first, yesterday second, then by month
-    keys.sort((a, b) {
-      if (a == 'today') return -1;
-      if (b == 'today') return 1;
-      if (a == 'yesterday') return -1;
-      if (b == 'yesterday') return 1;
-      return b.compareTo(a); // newer months first
-    });
+    keys.sort(du.compareDateGroupKeys);
 
     return keys.map((key) {
       final tasks = grouped[key]!;
-      String label;
-      if (key == 'today') {
-        label = '今天';
-      } else if (key == 'yesterday') {
-        label = '昨天';
-      } else {
-        label = du.formatMonth(key);
-      }
-      return DateGroup(label: label, key: key, tasks: tasks);
+      return DateGroup(
+        label: du.getDateGroupTitle(key),
+        key: key,
+        tasks: tasks,
+      );
+    }).toList();
+  }
+
+  List<DateGroup> getMonthGroupsForDateGroupKey(String key) {
+    final tasks = getTasksByDateGroupKey(key);
+    final map = <String, List<Task>>{};
+    for (final task in tasks) {
+      final monthKey = du.getMonthKey(task.taskDate);
+      map.putIfAbsent(monthKey, () => []);
+      map[monthKey]!.add(task);
+    }
+
+    final keys = map.keys.toList()..sort((a, b) => b.compareTo(a));
+    return keys.map((monthKey) {
+      return DateGroup(
+        label: du.formatMonth(monthKey),
+        key: 'month:$monthKey',
+        tasks: map[monthKey]!,
+      );
+    }).toList();
+  }
+
+  List<DateGroup> getDayGroupsForDateGroupKey(String key) {
+    final tasks = getTasksByDateGroupKey(key);
+    final map = <String, List<Task>>{};
+    for (final task in tasks) {
+      map.putIfAbsent(task.taskDate, () => []);
+      map[task.taskDate]!.add(task);
+    }
+
+    final keys = map.keys.toList()..sort((a, b) => b.compareTo(a));
+    return keys.map((dateKey) {
+      return DateGroup(
+        label: du.getDateGroupLabel(dateKey),
+        key: 'day:$dateKey',
+        tasks: map[dateKey]!,
+      );
     }).toList();
   }
 
