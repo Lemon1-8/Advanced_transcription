@@ -57,7 +57,7 @@
     <div class="diagram-container">
       <svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="architecture-title architecture-desc">
         <title id="architecture-title">Advanced Transcription 本地架构图</title>
-        <desc id="architecture-desc">Flutter 页面和组件将操作交给 AppProvider，由它协调领域模型、Hive 数据盒以及 JSON 导入导出；Android 文件意图通过 JSON 备份路径进入应用。</desc>
+        <desc id="architecture-desc">Flutter 页面和组件将操作交给 AppProvider，由它协调数据模型、Hive 数据盒以及 JSON 导入导出；Android 文件意图通过 JSON 备份路径进入应用。</desc>
         <defs>
           <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
             <circle cx="1" cy="1" r="0.9" fill="rgba(45,49,66,0.10)"/>
@@ -78,7 +78,7 @@
         <rect x="252" y="136" width="64" height="16" rx="2" fill="#f5f5f5"/>
         <text x="284" y="148" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">演示层</text>
         <rect x="436" y="136" width="88" height="16" rx="2" fill="#f5f5f5"/>
-        <text x="480" y="148" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">状态与领域</text>
+        <text x="480" y="148" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">状态与数据</text>
         <rect x="688" y="136" width="80" height="16" rx="2" fill="#f5f5f5"/>
         <text x="728" y="148" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">本地存储</text>
 
@@ -136,8 +136,8 @@
         <rect x="400" y="292" width="160" height="64" rx="6" fill="#f5f5f5"/>
         <rect x="400" y="292" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
         <rect x="408" y="300" width="56" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
-        <text x="436" y="312" fill="#2d3142" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">领域</text>
-        <text x="480" y="328" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">领域模型</text>
+        <text x="436" y="312" fill="#2d3142" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">数据</text>
+        <text x="480" y="328" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">数据模型</text>
         <text x="480" y="348" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">任务 · 分类 · 历史</text>
 
         <!-- Local persistence nodes. -->
@@ -169,7 +169,7 @@
         <rect x="40" y="524" width="14" height="10" rx="2" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
         <text x="60" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif">状态协调器</text>
         <rect x="188" y="524" width="14" height="10" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
-        <text x="208" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif">应用与领域</text>
+        <text x="208" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif">应用与数据</text>
         <rect x="312" y="524" width="14" height="10" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
         <text x="332" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif">本地存储</text>
         <rect x="436" y="524" width="14" height="10" rx="2" fill="rgba(79,93,117,0.10)" stroke="#5a6580" stroke-width="1"/>
