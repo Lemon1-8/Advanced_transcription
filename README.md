@@ -32,6 +32,12 @@
 
 状态集中在 `AppProvider`（ChangeNotifier），页面通过 `context.watch<>()` 监听变更。
 
+## 架构图
+
+![Advanced Transcription 本地架构图](./docs/architecture.svg)
+
+交互式架构图源文件：[architecture.html](./docs/architecture.html)
+
 ## 开发命令
 
 ```bash

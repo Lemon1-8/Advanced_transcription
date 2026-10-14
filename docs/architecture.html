@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Transcription · 本地架构图</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper: #f5f5f5;
+      --color-ink: #2d3142;
+      --color-muted: #4f5d75;
+      --color-accent: #bf4520;
+      --font-sans: 'Geist', system-ui, sans-serif;
+      --font-serif: 'Instrument Serif', serif;
+      --font-mono: 'Geist Mono', ui-monospace, monospace;
+    }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      padding: 40px;
+    }
+    .frame { max-width: 1200px; width: 100%; margin: 0 auto; }
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-ink);
+      margin-bottom: 24px;
+    }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print {
+      .diagram-container { overflow-x: visible; }
+      svg { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="frame">
+    <p class="eyebrow">架构图 · 系统设计</p>
+    <h1>Advanced Transcription 本地架构图</h1>
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="architecture-title architecture-desc">
+        <title id="architecture-title">Advanced Transcription 本地架构图</title>
+        <desc id="architecture-desc">Flutter 页面和组件将操作交给 AppProvider，由它协调领域模型、Hive 数据盒以及 JSON 导入导出；Android 文件意图通过 JSON 备份路径进入应用。</desc>
+        <defs>
+          <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.9" fill="rgba(45,49,66,0.10)"/>
+          </pattern>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+          <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+        <rect width="100%" height="100%" fill="url(#dots)" opacity="0.55"/>
+
+        <!-- Flat zones: presentation, state/domain, and local storage. -->
+        <rect x="192" y="132" width="184" height="240" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <rect x="388" y="132" width="184" height="240" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <rect x="584" y="132" width="288" height="240" rx="8" fill="rgba(45,49,66,0.02)" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+
+        <rect x="252" y="136" width="64" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="284" y="148" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">演示层</text>
+        <rect x="436" y="136" width="88" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="480" y="148" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">状态与领域</text>
+        <rect x="688" y="136" width="80" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="728" y="148" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">本地存储</text>
+
+        <!-- Arrows are drawn before node boxes. -->
+        <line x1="168" y1="244" x2="204" y2="244" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#arrow-link)"/>
+        <line x1="364" y1="244" x2="400" y2="244" stroke="#bf4520" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+        <line x1="480" y1="252" x2="480" y2="292" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <line x1="560" y1="216" x2="608" y2="216" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M 560,232 H 584 Q 592,232 592,240 V 308 Q 592,316 600,316 H 608" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+        <path d="M 608,340 H 584 Q 568,340 568,324 V 256 Q 568,240 560,240" fill="none" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <line x1="728" y1="404" x2="728" y2="356" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+        <!-- Arrow labels sit on opaque masks beside their strokes. -->
+        <rect x="168" y="220" width="32" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="184" y="232" fill="#2e5aa8" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">交互</text>
+        <rect x="368" y="220" width="32" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="384" y="232" fill="#bf4520" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">调用</text>
+        <rect x="432" y="260" width="40" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="452" y="273" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">状态</text>
+        <rect x="560" y="192" width="40" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="580" y="205" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">写入</text>
+        <rect x="520" y="260" width="40" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="540" y="273" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">读取</text>
+        <rect x="600" y="264" width="44" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="622" y="277" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">导入</text>
+        <rect x="640" y="364" width="80" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="680" y="377" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">打开 JSON</text>
+
+        <!-- External input: user. -->
+        <rect x="40" y="224" width="128" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="40" y="224" width="128" height="64" rx="6" fill="rgba(79,93,117,0.10)" stroke="#5a6580" stroke-width="1"/>
+        <rect x="48" y="232" width="32" height="16" rx="2" fill="transparent" stroke="rgba(90,101,128,0.40)" stroke-width="0.8"/>
+        <text x="64" y="244" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">用户</text>
+        <text x="104" y="260" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">用户</text>
+        <text x="104" y="280" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">任务操作</text>
+
+        <!-- Presentation node. -->
+        <rect x="204" y="212" width="160" height="72" rx="6" fill="#f5f5f5"/>
+        <rect x="204" y="212" width="160" height="72" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="212" y="220" width="28" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="226" y="232" fill="#2d3142" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">界面</text>
+        <text x="284" y="256" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">Flutter 界面</text>
+        <text x="284" y="276" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">页面与组件</text>
+
+        <!-- State focal node. -->
+        <rect x="400" y="180" width="160" height="72" rx="6" fill="#f5f5f5"/>
+        <rect x="400" y="180" width="160" height="72" rx="6" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
+        <rect x="408" y="188" width="44" height="16" rx="2" fill="transparent" stroke="rgba(191,69,32,0.50)" stroke-width="0.8"/>
+        <text x="430" y="200" fill="#bf4520" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">状态</text>
+        <text x="552" y="240" fill="rgba(191,69,32,0.10)" font-size="32" font-weight="600" font-family="'Geist Mono', monospace" text-anchor="end">01</text>
+        <text x="480" y="224" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">应用状态</text>
+        <text x="480" y="244" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">状态通知</text>
+
+        <!-- Domain model node. -->
+        <rect x="400" y="292" width="160" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="400" y="292" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <rect x="408" y="300" width="56" height="16" rx="2" fill="transparent" stroke="rgba(45,49,66,0.40)" stroke-width="0.8"/>
+        <text x="436" y="312" fill="#2d3142" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">领域</text>
+        <text x="480" y="328" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">领域模型</text>
+        <text x="480" y="348" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">任务 · 分类 · 历史</text>
+
+        <!-- Local persistence nodes. -->
+        <rect x="608" y="180" width="240" height="72" rx="6" fill="#f5f5f5"/>
+        <rect x="608" y="180" width="240" height="72" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+        <rect x="616" y="188" width="48" height="16" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+        <text x="640" y="200" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">存储</text>
+        <text x="728" y="224" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">Hive 数据盒</text>
+        <text x="728" y="244" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">任务 · 分类 · 设置</text>
+
+        <rect x="608" y="292" width="240" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="608" y="292" width="240" height="64" rx="6" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+        <rect x="616" y="300" width="56" height="16" rx="2" fill="transparent" stroke="rgba(79,93,117,0.50)" stroke-width="0.8"/>
+        <text x="644" y="312" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">备份</text>
+        <text x="728" y="328" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">JSON 备份</text>
+        <text x="728" y="348" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">导入 / 导出</text>
+
+        <!-- External Android input. -->
+        <rect x="608" y="404" width="240" height="64" rx="6" fill="#f5f5f5"/>
+        <rect x="608" y="404" width="240" height="64" rx="6" fill="rgba(79,93,117,0.10)" stroke="#5a6580" stroke-width="1"/>
+        <rect x="616" y="412" width="40" height="16" rx="2" fill="transparent" stroke="rgba(90,101,128,0.40)" stroke-width="0.8"/>
+        <text x="636" y="424" fill="#5a6580" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">输入</text>
+        <text x="728" y="440" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">Android 文件意图</text>
+        <text x="728" y="460" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif" text-anchor="middle">打开 .json</text>
+
+        <!-- Legend strip. -->
+        <line x1="40" y1="492" x2="920" y2="492" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+        <text x="40" y="508" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif">图例</text>
+        <rect x="40" y="524" width="14" height="10" rx="2" fill="rgba(191,69,32,0.08)" stroke="#bf4520" stroke-width="1"/>
+        <text x="60" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif">状态协调器</text>
+        <rect x="188" y="524" width="14" height="10" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="208" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif">应用与领域</text>
+        <rect x="312" y="524" width="14" height="10" rx="2" fill="rgba(45,49,66,0.05)" stroke="#4f5d75" stroke-width="1"/>
+        <text x="332" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif">本地存储</text>
+        <rect x="436" y="524" width="14" height="10" rx="2" fill="rgba(79,93,117,0.10)" stroke="#5a6580" stroke-width="1"/>
+        <text x="456" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif">外部输入</text>
+        <line x1="596" y1="530" x2="624" y2="530" stroke="#bf4520" stroke-width="1.4" marker-end="url(#arrow-accent)"/>
+        <text x="632" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif">主流程</text>
+        <line x1="748" y1="530" x2="776" y2="530" stroke="#4f5d75" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <text x="784" y="532" fill="#4f5d75" font-size="12" font-family="'Geist', 'Noto Sans SC', 'Microsoft YaHei', sans-serif">读取 / 异步</text>
+      </svg>
+    </div>
+  </main>
+</body>
+</html>
