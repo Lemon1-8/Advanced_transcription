@@ -64,20 +64,29 @@ lib/
 
 ### 首页和搜索页面
 
-<img src="./result_image/微信图片_20260526161350_16_8.jpg" alt="微信图片_20260526161350_16_8" style="zoom: 25%;" /><img src="./result_image/微信图片_20260526161351_17_8.jpg" alt="微信图片_20260526161351_17_8" style="zoom: 25%;" />
-
-
-
-<img src="./result_image/微信图片_20260526161358_22_8.jpg" alt="微信图片_20260526161358_22_8" style="zoom: 25%;" />
+<div align="center">
+  <img src="./result_image/微信图片_20260526161350_16_8.jpg" alt="首页任务列表" width="30%" />
+  <img src="./result_image/微信图片_20260526161351_17_8.jpg" alt="首页筛选视图" width="30%" />
+  <img src="./result_image/微信图片_20260526161358_22_8.jpg" alt="搜索页面" width="30%" />
+</div>
 
 ### 添加编辑和历史记录页面
 
-<img src="./result_image/微信图片_20260526162456_23_8.jpg" alt="微信图片_20260526162456_23_8" style="zoom: 25%;" /><img src="./result_image/微信图片_20260526162456_24_8.jpg" alt="微信图片_20260526162456_24_8" style="zoom: 25%;" />
+<div align="center">
+  <img src="./result_image/微信图片_20260526162456_23_8.jpg" alt="添加和编辑任务页面" width="42%" />
+  <img src="./result_image/微信图片_20260526162456_24_8.jpg" alt="任务历史记录页面" width="42%" />
+</div>
 
 ### 分类日期分类页面
 
-<img src="./result_image/微信图片_20260526161352_18_8.jpg" alt="微信图片_20260526161352_18_8" style="zoom: 25%;" /><img src="./result_image/微信图片_20260526161354_19_8.jpg" alt="微信图片_20260526161354_19_8" style="zoom: 25%;" />
+<div align="center">
+  <img src="./result_image/微信图片_20260526161352_18_8.jpg" alt="分类页面" width="42%" />
+  <img src="./result_image/微信图片_20260526161354_19_8.jpg" alt="日期分类页面" width="42%" />
+</div>
 
 ### 统计和设置页面
 
-<img src="./result_image/微信图片_20260526161355_20_8.jpg" alt="微信图片_20260526161355_20_8" style="zoom: 25%;" /><img src="./result_image/微信图片_20260526161356_21_8.jpg" alt="微信图片_20260526161356_21_8" style="zoom: 25%;" />
+<div align="center">
+  <img src="./result_image/微信图片_20260526161355_20_8.jpg" alt="统计页面" width="42%" />
+  <img src="./result_image/微信图片_20260526161356_21_8.jpg" alt="设置页面" width="42%" />
+</div>
